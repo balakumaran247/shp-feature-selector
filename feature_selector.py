@@ -1,8 +1,4 @@
-import os
-import sys
-import inspect
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtGui import QIcon
 
 
 class FeatureSelectorPlugin:
