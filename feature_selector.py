@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QAction
+from . import feature_selector_ui
+from qgis.PyQt.QtWidgets import QAction
 
 
 class FeatureSelectorPlugin:
@@ -16,4 +17,6 @@ class FeatureSelectorPlugin:
         del self.action
 
     def run(self):
-        self.iface.messageBar().pushMessage('hello from feature selector plugin')
+        self.dlg = feature_selector_ui.MyDockWidget(
+            parent=self.iface.mainWindow())
+        self.dlg.show()
