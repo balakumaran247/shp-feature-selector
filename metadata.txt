@@ -2,6 +2,6 @@
 name=feature-selector
 description=dynamic panel for selecting feature from layer
 version=1.0
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.22
 author=Balakumaran
 email=balakumaran247@gmail.com
