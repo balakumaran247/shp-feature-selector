@@ -19,28 +19,28 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def contents(self):
         Form = QtWidgets.QWidget()
-        home_ui = home_widget()
-        home_ui.setupUi(Form)
+        self.home_ui = home_widget()
+        self.home_ui.setupUi(Form)
         self.layer_ui = lyr_selector()
         self.layer_ui.setupUi(Form)
-        home_ui.main_input_layout.addWidget(self.layer_ui.layoutWidget)
+        self.home_ui.main_input_layout.addWidget(self.layer_ui.layoutWidget)
         self.layer_ui.browse_button.clicked.connect(self.browse_shp)
+        self.layer_ui.input_layer_dd.currentIndexChanged.connect(self.choose_page)
         selector_ui = selector_widget()
         selector_ui.setupUi(Form)
-        home_ui.selector_placeholder.setLayout(selector_ui.verticalLayout_2)
+        self.home_ui.selector_placeholder.setLayout(selector_ui.verticalLayout_2)
         filter_main = filter_main_widget()
         filter_main.setupUi(Form)
-        home_ui.filter_placeholder_layout.addWidget(filter_main.widget)
-        home_ui.stackedWidget.setCurrentWidget(home_ui.page_2)
+        self.home_ui.filter_placeholder_layout.addWidget(filter_main.widget)
         spacerItem = QtWidgets.QSpacerItem(
             20, 182, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        home_ui.filter_placeholder_layout.addItem(spacerItem)
+        self.home_ui.filter_placeholder_layout.addItem(spacerItem)
         for _ in range(4):
-            home_ui.filter_placeholder_layout.removeItem(spacerItem)
+            self.home_ui.filter_placeholder_layout.removeItem(spacerItem)
             add_widget = filter_additional_widget()
             add_widget.setupUi(Form)
-            home_ui.filter_placeholder_layout.addWidget(add_widget.widget)
-            home_ui.filter_placeholder_layout.addItem(spacerItem)
+            self.home_ui.filter_placeholder_layout.addWidget(add_widget.widget)
+            self.home_ui.filter_placeholder_layout.addItem(spacerItem)
         return Form
     
     def get_input_layers(self):
@@ -49,3 +49,10 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
     def browse_shp(self):
         self.layers_class.browse_input_shp()
         self.get_input_layers()
+    
+    def choose_page(self):
+        layer_name = self.layer_ui.input_layer_dd.currentText()
+        if status := self.layers_class.check_layer(layer_name):
+            self.home_ui.stackedWidget.setCurrentWidget(self.home_ui.page)
+        else:
+            self.home_ui.stackedWidget.setCurrentWidget(self.home_ui.page_2)
