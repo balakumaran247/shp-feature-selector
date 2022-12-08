@@ -18,17 +18,28 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         self.get_input_layers()
 
     def contents(self):
-        Form = QtWidgets.QWidget()
+        self.Form = QtWidgets.QWidget()
+        self.home_win()
+        self.layer_panel()
+        self.selector_panel()
+        self.filter_panel()
+        return self.Form
+
+    def home_win(self):
         self.home_ui = home_widget()
-        self.home_ui.setupUi(Form)
+        self.home_ui.setupUi(self.Form)
+
+    def layer_panel(self):
         self.layer_ui = lyr_selector()
-        self.layer_ui.setupUi(Form)
+        self.layer_ui.setupUi(self.Form)
         self.home_ui.main_input_layout.addWidget(self.layer_ui.layoutWidget)
         self.layer_ui.browse_button.clicked.connect(self.browse_shp)
         self.layer_ui.input_layer_dd.currentIndexChanged.connect(
             self.choose_page)
+
+    def selector_panel(self):
         self.selector_ui = selector_widget()
-        self.selector_ui.setupUi(Form)
+        self.selector_ui.setupUi(self.Form)
         self.home_ui.selector_placeholder.setLayout(
             self.selector_ui.verticalLayout_2)
         self.selector_ui.state_dd.currentIndexChanged.connect(
@@ -37,19 +48,21 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
             self.populate_block)
         self.selector_ui.block_dd.currentIndexChanged.connect(
             self.populate_village)
-        filter_main = filter_main_widget()
-        filter_main.setupUi(Form)
-        self.home_ui.filter_placeholder_layout.addWidget(filter_main.widget)
-        spacerItem = QtWidgets.QSpacerItem(
+
+    def filter_panel(self):
+        self.filter_main = filter_main_widget()
+        self.filter_main.setupUi(self.Form)
+        self.home_ui.filter_placeholder_layout.addWidget(
+            self.filter_main.widget)
+        self.spacerItem = QtWidgets.QSpacerItem(
             20, 182, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.home_ui.filter_placeholder_layout.addItem(spacerItem)
+        self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
         for _ in range(4):
-            self.home_ui.filter_placeholder_layout.removeItem(spacerItem)
+            self.home_ui.filter_placeholder_layout.removeItem(self.spacerItem)
             add_widget = filter_additional_widget()
-            add_widget.setupUi(Form)
+            add_widget.setupUi(self.Form)
             self.home_ui.filter_placeholder_layout.addWidget(add_widget.widget)
-            self.home_ui.filter_placeholder_layout.addItem(spacerItem)
-        return Form
+            self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
 
     def get_input_layers(self):
         self.layers_class.layers_dd(self.layer_ui.input_layer_dd)
@@ -66,6 +79,7 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
             self.populate_state()
         else:
             self.home_ui.stackedWidget.setCurrentWidget(self.home_ui.page_2)
+            self.populate_filter_main()
 
     def populate_state(self):
         slist = self.layers_class.get_state_list(self.layer)
@@ -87,3 +101,24 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         vlist = self.layers_class.get_village_list(
             self.layer, self.state, self.dist, self.block)
         self.layers_class.populate_dd(self.selector_ui.village_dd, vlist)
+
+    def populate_filter_main(self):
+        self.filtered_col = []
+        if self.layer:
+            self.field_cols = [
+                'select'] + sorted(set(self.layers_class.get_col_names(self.layer)))
+            self.layers_class.populate_dd(
+                self.filter_main.heading_selector, self.field_cols)
+        self.filter_main.heading_selector.currentIndexChanged.connect(
+            self.populate_fm_value)
+
+    def populate_fm_value(self):
+        self.field_cols += self.filtered_col
+        self.filtered_col = []
+        main_heading_selected = self.filter_main.heading_selector.currentText()
+        value_list = [
+            'select'] + self.layers_class.get_unique_values(self.layer, main_heading_selected)
+        self.layers_class.populate_dd(
+            self.filter_main.value_selector, value_list)
+        self.field_cols.remove(main_heading_selected)
+        self.filtered_col.append(main_heading_selected)
