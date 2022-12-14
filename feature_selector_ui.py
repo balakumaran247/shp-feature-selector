@@ -6,7 +6,7 @@ from .gui.selector_panel import Ui_Form as selector_widget
 from .gui.filter_selector import Ui_Form as filter_main_widget
 from .gui.filter_selector_add import Ui_Form as filter_additional_widget
 from .gui.main_window import Ui_MainWindow
-from .feature_selector_core import LayerHandler
+from .feature_selector_core import LayerHandler, AddFilters
 
 
 class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -57,12 +57,12 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         self.spacerItem = QtWidgets.QSpacerItem(
             20, 182, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
-        for _ in range(4):
-            self.home_ui.filter_placeholder_layout.removeItem(self.spacerItem)
-            add_widget = filter_additional_widget()
-            add_widget.setupUi(self.Form)
-            self.home_ui.filter_placeholder_layout.addWidget(add_widget.widget)
-            self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
+        # for _ in range(4):
+        #     self.home_ui.filter_placeholder_layout.removeItem(self.spacerItem)
+        #     add_widget = filter_additional_widget()
+        #     add_widget.setupUi(self.Form)
+        #     self.home_ui.filter_placeholder_layout.addWidget(add_widget.widget)
+        #     self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
 
     def get_input_layers(self):
         self.layers_class.layers_dd(self.layer_ui.input_layer_dd)
@@ -80,6 +80,7 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.home_ui.stackedWidget.setCurrentWidget(self.home_ui.page_2)
             self.populate_filter_main()
+            # self.create_add_dd()
 
     def populate_state(self):
         slist = self.layers_class.get_state_list(self.layer)
@@ -113,12 +114,41 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
             self.populate_fm_value)
 
     def populate_fm_value(self):
-        self.field_cols += self.filtered_col
-        self.filtered_col = []
-        main_heading_selected = self.filter_main.heading_selector.currentText()
+        # self.field_cols += self.filtered_col
+        # self.filtered_col = []
+        self.main_heading_selected = self.filter_main.heading_selector.currentText()
         value_list = [
-            'select'] + self.layers_class.get_unique_values(self.layer, main_heading_selected)
+            'select'] + self.layers_class.get_unique_values(self.layer, self.main_heading_selected)
         self.layers_class.populate_dd(
             self.filter_main.value_selector, value_list)
-        self.field_cols.remove(main_heading_selected)
-        self.filtered_col.append(main_heading_selected)
+        # self.field_cols.remove(self.main_heading_selected)
+        # self.filtered_col.append(self.main_heading_selected)
+        self.filter_main.value_selector.currentIndexChanged.connect(self.add_fa_dd)
+    
+    def add_fa_dd(self):
+        main_value_selected = self.filter_main.value_selector.currentText()
+        new_fields = self.field_cols.copy()
+        new_fields.remove(self.main_heading_selected)
+        add_filter = AddFilters(new_fields,
+                                [(self.main_heading_selected, main_value_selected)],
+                                self.home_ui.filter_placeholder_layout,
+                                self.layer,
+                                self.Form)
+    # def add_fa_dd(self):
+    #     for k, v in self.add_dd_items.items():
+    #         if not v:
+    #             self.home_ui.filter_placeholder_layout.removeItem(self.spacerItem)
+    #             # add_widget = filter_additional_widget()
+    #             # add_widget.setupUi(self.Form)
+    #             k.setupUi(self.Form)
+    #             self.home_ui.filter_placeholder_layout.addWidget(k.widget)
+    #             self.home_ui.filter_placeholder_layout.addItem(self.spacerItem)
+    #             self.layers_class.populate_dd(k.heading_selector, self.field_cols)
+    #             break
+        
+    # def create_add_dd(self):
+    #     def gen_dd():
+    #         add_widget = filter_additional_widget()
+    #         # add_widget.setupUi(self.Form)
+    #         return add_widget
+    #     self.add_dd_items = {gen_dd(): None for _ in range(len(self.field_cols)-2)}
