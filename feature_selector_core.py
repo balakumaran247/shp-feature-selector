@@ -73,19 +73,22 @@ class LayerHandler:
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
 
 class AddFilters(LayerHandler):
-    def __init__(self, fields, expr_list, layout, layer, Form) -> None:
+    def __init__(self, fields, expr_list, layout, layer, Form, spacer) -> None:
         self.fields = fields
         self.expr_list = expr_list
         self.layout = layout
         self.layer = layer
         self.Form = Form
+        self.spacer = spacer
         self.create_dd()
         self.populate_filter_main()
     
     def create_dd(self):
         self.add_widget = filter_main_widget()
         self.add_widget.setupUi(self.Form)
+        self.layout.removeItem(self.spacer)
         self.layout.addWidget(self.add_widget.widget)
+        self.layout.addItem(self.spacer)
         self.add_widget.heading_selector.currentIndexChanged.connect(lambda: self.populate_value_dd())
         self.add_widget.value_selector.currentIndexChanged.connect(lambda: self.child_item())
     

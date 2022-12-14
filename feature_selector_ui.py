@@ -133,7 +133,8 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
                                 [(self.main_heading_selected, main_value_selected)],
                                 self.home_ui.filter_placeholder_layout,
                                 self.layer,
-                                self.Form)
+                                self.Form,
+                                self.spacerItem)
     # def add_fa_dd(self):
     #     for k, v in self.add_dd_items.items():
     #         if not v:
