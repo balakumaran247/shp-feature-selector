@@ -1,6 +1,7 @@
 from qgis.core import QgsProject, QgsVectorLayer, QgsExpression, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QFileDialog
 import os
+from .gui.filter_selector import Ui_Form as filter_main_widget
 
 
 class LayerHandler:
@@ -64,9 +65,50 @@ class LayerHandler:
 
     def _extract_info(self, vlayerFilter, layer, col_name):
         expr = QgsExpression(vlayerFilter)
-        stateFeas = layer.getFeatures(QgsFeatureRequest(expr))
-        li = [fea[col_name] for fea in stateFeas if fea[col_name]]
+        col_feas = layer.getFeatures(QgsFeatureRequest(expr))
+        li = [fea[col_name] for fea in col_feas if fea[col_name]]
         return sorted(set(filter(lambda x: isinstance(x, str), li)))
 
     def _get_filter_exp(self, *args):
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
+
+class AddFilters(LayerHandler):
+    def __init__(self, fields, expr_list, layout, layer, Form) -> None:
+        self.fields = fields
+        self.expr_list = expr_list
+        self.layout = layout
+        self.layer = layer
+        self.Form = Form
+        self.create_dd()
+        self.populate_filter_main()
+    
+    def create_dd(self):
+        self.add_widget = filter_main_widget()
+        self.add_widget.setupUi(self.Form)
+        self.layout.addWidget(self.add_widget.widget)
+        self.add_widget.heading_selector.currentIndexChanged.connect(lambda: self.populate_value_dd())
+        self.add_widget.value_selector.currentIndexChanged.connect(lambda: self.child_item())
+    
+    def populate_filter_main(self):
+        self.add_widget.heading_selector.blockSignals(True)
+        self.populate_dd(self.add_widget.heading_selector, self.fields)
+        self.add_widget.heading_selector.blockSignals(False)
+    
+    def populate_value_dd(self):
+        self.selected_field = self.add_widget.heading_selector.currentText()
+        print(self.selected_field)
+        if self.selected_field != 'select':
+            vlayerFilter = self._get_filter_exp(*self.expr_list)
+            dd_values = ['select'] + list(self._extract_info(vlayerFilter, self.layer, self.selected_field))
+            self.add_widget.value_selector.blockSignals(True)
+            self.populate_dd(self.add_widget.value_selector, dd_values)
+            self.add_widget.value_selector.blockSignals(False)
+    
+    def child_item(self):
+        self.selected_value = self.add_widget.value_selector.currentText()
+        new_fields = self.fields.copy()
+        new_fields.remove(self.selected_field)
+        new_expr_list = self.expr_list.copy()
+        new_expr_list.append((self.selected_field, self.selected_value))
+        print(new_fields)
+        print(new_expr_list)
