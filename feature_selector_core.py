@@ -73,13 +73,15 @@ class LayerHandler:
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
 
 class AddFilters(LayerHandler):
-    def __init__(self, fields, expr_list, layout, layer, Form, spacer) -> None:
+    def __init__(self, fields, expr_list, ui, layer, Form, spacer) -> None:
         self.fields = fields
         self.expr_list = expr_list
-        self.layout = layout
+        self.ui = ui
+        self.layout = self.ui.filter_placeholder_layout
         self.layer = layer
         self.Form = Form
         self.spacer = spacer
+        self.child = None
         self.create_dd()
         self.populate_filter_main()
     
@@ -99,7 +101,6 @@ class AddFilters(LayerHandler):
     
     def populate_value_dd(self):
         self.selected_field = self.add_widget.heading_selector.currentText()
-        print(self.selected_field)
         if self.selected_field != 'select':
             vlayerFilter = self._get_filter_exp(*self.expr_list)
             dd_values = ['select'] + list(self._extract_info(vlayerFilter, self.layer, self.selected_field))
@@ -108,10 +109,24 @@ class AddFilters(LayerHandler):
             self.add_widget.value_selector.blockSignals(False)
     
     def child_item(self):
+        if self.child:
+            self.del_child()
         self.selected_value = self.add_widget.value_selector.currentText()
         new_fields = self.fields.copy()
         new_fields.remove(self.selected_field)
         new_expr_list = self.expr_list.copy()
         new_expr_list.append((self.selected_field, self.selected_value))
-        print(new_fields)
-        print(new_expr_list)
+        self.child = AddFilters(new_fields,
+                                new_expr_list,
+                                self.ui,
+                                self.layer,
+                                self.Form,
+                                self.spacer)
+        self.ui.page_2.update()
+    
+    def del_child(self):
+        if self.child:
+            self.child.del_child()
+            self.child.add_widget.widget.setParent(None)
+        del self.child
+        self.child = None

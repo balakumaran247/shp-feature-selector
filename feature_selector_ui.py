@@ -131,7 +131,7 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         new_fields.remove(self.main_heading_selected)
         add_filter = AddFilters(new_fields,
                                 [(self.main_heading_selected, main_value_selected)],
-                                self.home_ui.filter_placeholder_layout,
+                                self.home_ui,
                                 self.layer,
                                 self.Form,
                                 self.spacerItem)
