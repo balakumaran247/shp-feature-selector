@@ -64,10 +64,13 @@ class LayerHandler:
         return self._extract_info(vlayerFilter, layer, self.jaltol_cols[3])
 
     def _extract_info(self, vlayerFilter, layer, col_name):
-        expr = QgsExpression(vlayerFilter)
-        col_feas = layer.getFeatures(QgsFeatureRequest(expr))
+        col_feas = self._extract_info_raw(vlayerFilter, layer)
         li = [fea[col_name] for fea in col_feas if fea[col_name]]
         return sorted(set(filter(lambda x: isinstance(x, str), li)))
+    
+    def _extract_info_raw(self, vlayerFilter, layer):
+        expr = QgsExpression(vlayerFilter)
+        return layer.getFeatures(QgsFeatureRequest(expr))
 
     def _get_filter_exp(self, *args):
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
@@ -116,12 +119,15 @@ class AddFilters(LayerHandler):
         new_fields.remove(self.selected_field)
         new_expr_list = self.expr_list.copy()
         new_expr_list.append((self.selected_field, self.selected_value))
-        self.child = AddFilters(new_fields,
-                                new_expr_list,
-                                self.ui,
-                                self.layer,
-                                self.Form,
-                                self.spacer)
+        col_feas = self._extract_info_raw(self._get_filter_exp(*new_expr_list), self.layer)
+        li = [fea[new_fields[-1]] for fea in col_feas]
+        if len(new_fields) > 1 and len(li) > 1:
+            self.child = AddFilters(new_fields,
+                                    new_expr_list,
+                                    self.ui,
+                                    self.layer,
+                                    self.Form,
+                                    self.spacer)
         self.ui.page_2.update()
     
     def del_child(self):
