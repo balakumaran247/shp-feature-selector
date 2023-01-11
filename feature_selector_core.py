@@ -2,6 +2,7 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsExpression, QgsFeatureReque
 from qgis.PyQt.QtWidgets import QFileDialog
 import os
 from .gui.filter_selector import Ui_Form as filter_main_widget
+from qgis.utils import iface
 
 
 class LayerHandler:
@@ -67,13 +68,27 @@ class LayerHandler:
         col_feas = self._extract_info_raw(vlayerFilter, layer)
         li = [fea[col_name] for fea in col_feas if fea[col_name]]
         return sorted(set(filter(lambda x: isinstance(x, str), li)))
-    
+
     def _extract_info_raw(self, vlayerFilter, layer):
         expr = QgsExpression(vlayerFilter)
         return layer.getFeatures(QgsFeatureRequest(expr))
 
     def _get_filter_exp(self, *args):
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
+
+    def select_village(self, state, dist, block, village):
+        vlayerFilter = self._get_filter_exp(
+            (self.jaltol_cols[0], state),
+            (self.jaltol_cols[1], dist),
+            (self.jaltol_cols[2], block),
+            (self.jaltol_cols[3], village)
+        )
+        self.select_n_zoom(vlayerFilter)
+
+    def select_n_zoom(self, vlayerFilter):
+        iface.activeLayer().selectByExpression(vlayerFilter)
+        iface.actionZoomToSelected().trigger()
+
 
 class AddFilters(LayerHandler):
     def __init__(self, fields, expr_list, ui, layer, Form, spacer) -> None:
@@ -87,30 +102,33 @@ class AddFilters(LayerHandler):
         self.child = None
         self.create_dd()
         self.populate_filter_main()
-    
+
     def create_dd(self):
         self.add_widget = filter_main_widget()
         self.add_widget.setupUi(self.Form)
         self.layout.removeItem(self.spacer)
         self.layout.addWidget(self.add_widget.widget)
         self.layout.addItem(self.spacer)
-        self.add_widget.heading_selector.currentIndexChanged.connect(lambda: self.populate_value_dd())
-        self.add_widget.value_selector.currentIndexChanged.connect(lambda: self.child_item())
-    
+        self.add_widget.heading_selector.currentIndexChanged.connect(
+            lambda: self.populate_value_dd())
+        self.add_widget.value_selector.currentIndexChanged.connect(
+            lambda: self.child_item())
+
     def populate_filter_main(self):
         self.add_widget.heading_selector.blockSignals(True)
         self.populate_dd(self.add_widget.heading_selector, self.fields)
         self.add_widget.heading_selector.blockSignals(False)
-    
+
     def populate_value_dd(self):
         self.selected_field = self.add_widget.heading_selector.currentText()
         if self.selected_field != 'select':
             vlayerFilter = self._get_filter_exp(*self.expr_list)
-            dd_values = ['select'] + list(self._extract_info(vlayerFilter, self.layer, self.selected_field))
+            dd_values = [
+                'select'] + list(self._extract_info(vlayerFilter, self.layer, self.selected_field))
             self.add_widget.value_selector.blockSignals(True)
             self.populate_dd(self.add_widget.value_selector, dd_values)
             self.add_widget.value_selector.blockSignals(False)
-    
+
     def child_item(self):
         if self.child:
             self.del_child()
@@ -119,7 +137,8 @@ class AddFilters(LayerHandler):
         new_fields.remove(self.selected_field)
         new_expr_list = self.expr_list.copy()
         new_expr_list.append((self.selected_field, self.selected_value))
-        col_feas = self._extract_info_raw(self._get_filter_exp(*new_expr_list), self.layer)
+        col_feas = self._extract_info_raw(
+            self._get_filter_exp(*new_expr_list), self.layer)
         li = [fea[new_fields[-1]] for fea in col_feas]
         if len(new_fields) > 1 and len(li) > 1:
             self.child = AddFilters(new_fields,
@@ -128,8 +147,10 @@ class AddFilters(LayerHandler):
                                     self.layer,
                                     self.Form,
                                     self.spacer)
+        else:
+            self.select_n_zoom(self._get_filter_exp(*new_expr_list))
         self.ui.page_2.update()
-    
+
     def del_child(self):
         if self.child:
             self.child.del_child()

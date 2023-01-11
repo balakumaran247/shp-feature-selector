@@ -46,6 +46,8 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
             self.populate_block)
         self.selector_ui.block_dd.currentIndexChanged.connect(
             self.populate_village)
+        self.selector_ui.village_dd.currentIndexChanged.connect(
+            self.select_feature)
 
     def filter_panel(self):
         self.add_filter = None
@@ -99,6 +101,11 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
             self.layer, self.state, self.dist, self.block)
         self.layers_class.populate_dd(self.selector_ui.village_dd, vlist)
 
+    def select_feature(self):
+        self.village = self.selector_ui.village_dd.currentText()
+        self.layers_class.select_village(
+            self.state, self.dist, self.block, self.village)
+
     def populate_filter_main(self):
         self.filtered_col = []
         if self.layer:
@@ -126,10 +133,10 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
         if main_value_selected != 'select':
             new_fields = self.field_cols.copy()
             new_fields.remove(self.main_heading_selected)
-            self.add_filter = AddFilters(new_fields,
-                                         [(self.main_heading_selected,
-                                           main_value_selected)],
-                                         self.home_ui,
-                                         self.layer,
-                                         self.Form,
-                                         self.spacerItem)
+            self.add_filter = AddFilters(
+                new_fields,
+                [(self.main_heading_selected, main_value_selected)],
+                self.home_ui,
+                self.layer,
+                self.Form,
+                self.spacerItem)
