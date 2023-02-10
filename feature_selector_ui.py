@@ -26,6 +26,7 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
     def home_win(self):
         self.home_ui = home_widget()
         self.home_ui.setupUi(self.Form)
+        self.home_ui.stackedWidget.setCurrentIndex(0)
 
     def layer_panel(self):
         self.layer_ui = lyr_selector()
