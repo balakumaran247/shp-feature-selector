@@ -104,7 +104,7 @@ class MyDockWidget(QtWidgets.QMainWindow, Ui_MainWindow):
     def select_feature(self):
         self.village = self.selector_ui.village_dd.currentText()
         self.layers_class.select_village(
-            self.state, self.dist, self.block, self.village)
+            self.state, self.dist, self.block, self.village, self.layer)
 
     def populate_filter_main(self):
         self.filtered_col = []

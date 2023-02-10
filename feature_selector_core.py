@@ -76,16 +76,17 @@ class LayerHandler:
     def _get_filter_exp(self, *args):
         return ' and '.join(map(lambda x: f"\"{x[0]}\"='{x[1]}'", args))
 
-    def select_village(self, state, dist, block, village):
+    def select_village(self, state, dist, block, village, layer):
         vlayerFilter = self._get_filter_exp(
             (self.jaltol_cols[0], state),
             (self.jaltol_cols[1], dist),
             (self.jaltol_cols[2], block),
             (self.jaltol_cols[3], village)
         )
-        self.select_n_zoom(vlayerFilter)
+        self.select_n_zoom(vlayerFilter, layer)
 
-    def select_n_zoom(self, vlayerFilter):
+    def select_n_zoom(self, vlayerFilter, layer):
+        iface.setActiveLayer(layer)
         iface.activeLayer().selectByExpression(vlayerFilter)
         iface.actionZoomToSelected().trigger()
 
@@ -148,7 +149,7 @@ class AddFilters(LayerHandler):
                                     self.Form,
                                     self.spacer)
         else:
-            self.select_n_zoom(self._get_filter_exp(*new_expr_list))
+            self.select_n_zoom(self._get_filter_exp(*new_expr_list), self.layer)
         self.ui.page_2.update()
 
     def del_child(self):
